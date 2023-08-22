@@ -5,7 +5,9 @@ const numInput = document.getElementById("vehicleNo2");
 const capInput = document.getElementById("captcha_code");
 const form = document.getElementById("form");
 
+
 let data = [];
+
 
 async function fetchFakeData() {
     const jsonUrl = chrome.runtime.getURL("fakejson.json");
@@ -87,6 +89,7 @@ async function submitFormData(car) {
         capInput.value = captchaSolution;
     console.log(captchaSolution)
     form.submit();
+
     }
 }
 async function processCars() {
