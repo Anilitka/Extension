@@ -18,7 +18,16 @@ async function fetchFakeData() {
 
         data = jsonData.cars; 
 
-        processCars();
+        for (let car of data) {
+            console.log(data)
+            console.log(car)
+            await submitFormData(car);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            setTimeout(() => {
+                navigateBack();
+            }, 1000)
+        }
+
     } catch (error) {
         console.error("Error fetching or parsing JSON:", error);
     }
@@ -91,18 +100,15 @@ async function submitFormData(car) {
         capInput.value = captchaSolution;
     console.log(captchaSolution)
     form.submit();
-
+    
     }
 
 
 }
 function navigateBack() {
     const backButton = document.querySelector('input[type="submit"][value="უკან დაბრუნება"]');
-    if (backButton) {
         backButton.click();
-    } else {
-        console.log("Back button not found.");
-    }
+
 }
 async function processCars() {
     for (const car of data) {
@@ -114,6 +120,6 @@ async function processCars() {
 }
 
 fetchFakeData();
-setTimeout(() => {
-    navigateBack();
-}, 1000)
+       setTimeout(() => {
+        navigateBack();
+    }, 1000)
