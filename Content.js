@@ -7,7 +7,8 @@ const form = document.getElementById("form");
 
 
 let data = [];
-
+let currentIndex = 0;
+let previousUrl = "";
 
 async function fetchFakeData() {
     const jsonUrl = chrome.runtime.getURL("fakejson.json");
@@ -21,6 +22,7 @@ async function fetchFakeData() {
     } catch (error) {
         console.error("Error fetching or parsing JSON:", error);
     }
+
 }
 async function solveCaptcha() {
     const apiKey = '5e53dcfd4c785787b7fd85aad8544a2a';
@@ -91,12 +93,27 @@ async function submitFormData(car) {
     form.submit();
 
     }
+
+
+}
+function navigateBack() {
+    const backButton = document.querySelector('input[type="submit"][value="უკან დაბრუნება"]');
+    if (backButton) {
+        backButton.click();
+    } else {
+        console.log("Back button not found.");
+    }
 }
 async function processCars() {
     for (const car of data) {
         await submitFormData(car);
         await new Promise(resolve => setTimeout(resolve, 2000));
+
     }
+
 }
 
 fetchFakeData();
+setTimeout(() => {
+    navigateBack();
+}, 1000)
