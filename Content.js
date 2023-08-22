@@ -39,24 +39,40 @@ async function solveCaptcha() {
     });
 
     // Send base64 image data to 2Captcha for solving
-    const solutionResponse = await fetch(`https://2captcha.com/in.php?key=${apiKey}&method=base64&json=1&body=${encodeURIComponent(base64ImageData)}`);
-    const solutionData = await solutionResponse.json();
+    const formData = new FormData();
+    formData.append('method', 'base64');
+    formData.append('key', apiKey);
+    formData.append('body', base64ImageData);
 
-    if (solutionData.status === 1) {
-        const captchaId = solutionData.request;
+    try {
+        const solutionResponse = await fetch('https://2captcha.com/in.php', {
+            method: 'POST',
+            body: formData,
+        });
 
-        while (true) {
-            const checkSolutionResponse = await fetch(`https://2captcha.com/res.php?key=${apiKey}&action=get&id=${captchaId}&json=1`);
-            const checkSolutionData = await checkSolutionResponse.json();
+        const solutionData = await solutionResponse.text();
 
-            if (checkSolutionData.status === 1) {
-                return checkSolutionData.request;
+        if (solutionData.startsWith('OK|')) {
+            const captchaId = solutionData.split('|')[1];
+
+            while (true) {
+                const checkSolutionResponse = await fetch(
+                    `https://2captcha.com/res.php?key=${apiKey}&action=get&id=${captchaId}&json=1`
+                );
+                const checkSolutionData = await checkSolutionResponse.json();
+
+                if (checkSolutionData.status === 1) {
+                    return checkSolutionData.request;
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 5000));
             }
-
-            await new Promise(resolve => setTimeout(resolve, 5000));
+        } else {
+            console.error('Captcha solving failed:', solutionData);
+            return null;
         }
-    } else {
-        console.error('Captcha solving failed:', solutionData.request);
+    } catch (error) {
+        console.error('Error solving CAPTCHA:', error);
         return null;
     }
 }
