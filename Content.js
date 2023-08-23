@@ -26,18 +26,19 @@ async function fetchFakeData() {
     fetch(URL, { method: "GET", headers: {'Content-Type': 'fakejson.json'}})
     .then(response => response.json())
     .then(data => {
-        chrome.storage.local.set({ data, currentIndex: 0 });
+       chrome.storage.local.set({"currentIndex": 0})
 
         for (let i = currentIndex; i < data.length;) {
+        chrome.storage.local.get(['currentIndex'], (result) => {
+            const currentIndex = result.currentIndex || 0;
+            // Incremented currentIndex will be used in the next loop iteration
+            i = currentIndex;
+        });
+        console.log(chrome.storage.local.get(['currentIndex']))
             const car = data[i];
             submitFormData(car);
-                     // Get the updated currentIndex from storage
-                     chrome.storage.local.get(['currentIndex'], (result) => {
-                        const currentIndex = result.currentIndex || 0;
-                        // Incremented currentIndex will be used in the next loop iteration
-                        i = currentIndex;
-                    });
         }
+
 //      chrome.storage.sync.set({ "index": 0 }); chrome.storage.local.set({ "data": data });
 //      chrome.storage.sync.set({ "currentData": data[0] });
 //      })
@@ -55,7 +56,6 @@ async function fetchFakeData() {
     })
 }
     
-  
 
 async function solveCaptcha() {
     const apiKey = '5e53dcfd4c785787b7fd85aad8544a2a';
@@ -161,6 +161,6 @@ function navigateBack() {
 
 fetchFakeData();
 
-// setTimeout(() => {
-//     navigateBack();
-// }, 1000)
+setTimeout(() => {
+    navigateBack();
+}, 1000)
