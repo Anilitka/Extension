@@ -11,25 +11,51 @@ let data = [];
 let currentIndex = 0;
 
 
-
-
 async function fetchFakeData() {
-    const jsonUrl = chrome.runtime.getURL("fakejson.json");
-    try {
-        const response = await fetch(jsonUrl);
-        const jsonData = await response.json();
-        data = jsonData.cars;
 
-        for(let i = currentIndex; i< data.length;){
-           const car = data[currentIndex];
-           submitFormData(car);
-           data.shift();
+    // const jsonUrl = "fakejson.json"; // Adjust the URL as needed
+    // try {
+    //     const response = await fetch(jsonUrl);
+    //     const jsonData = await response.json();
+    //     data = jsonData.cars;
+
+    //     for (let i = currentIndex; i < data.length; ) {
+    //         const car = data[currentIndex];
+    //         submitFormData(car);
+    //     }Function sendGETRequest() {
+    fetch(URL, { method: "GET", headers: {'Content-Type': 'fakejson.json'}})
+    .then(response => response.json())
+    .then(data => {
+        chrome.storage.local.set({ data, currentIndex: 0 });
+
+        for (let i = currentIndex; i < data.length;) {
+            const car = data[i];
+            submitFormData(car);
+                     // Get the updated currentIndex from storage
+                     chrome.storage.local.get(['currentIndex'], (result) => {
+                        const currentIndex = result.currentIndex || 0;
+                        // Incremented currentIndex will be used in the next loop iteration
+                        i = currentIndex;
+                    });
         }
-    } catch (error) {
+//      chrome.storage.sync.set({ "index": 0 }); chrome.storage.local.set({ "data": data });
+//      chrome.storage.sync.set({ "currentData": data[0] });
+//      })
+//      state = false;
+//      chrome.storage.sync.set({ "state": state });
+//      window.close();
+//      chrome.runtime.sendMessage({ message: "writeCarNumber" });
+//      .catch((error) => {
+// console.log(error);
+//      });
+     
+    })
+    .catch ((error) => {
         console.error("Error fetching or parsing JSON:", error);
-    }
+    })
 }
-
+    
+  
 
 async function solveCaptcha() {
     const apiKey = '5e53dcfd4c785787b7fd85aad8544a2a';
@@ -101,12 +127,18 @@ async function submitFormData(car) {
     const captchaSolution = await solveCaptcha();
     if (captchaSolution !== null) {
         capInput.value = captchaSolution;
+ 
         form.submit();
-        await waitForSubmission(); // Wait for form submission to complete
+        chrome.storage.local.get(['currentIndex'], (result) => {
+            const currentIndex = result.currentIndex || 0;
+            chrome.storage.local.set({ currentIndex: currentIndex + 1 });
+        });
     } else {
         console.log("Captcha solution failed for this car. Skipping.");
     }
+
 }
+
 
 
 async function waitForElement(selector) {
@@ -121,6 +153,14 @@ async function waitForElement(selector) {
     });
 }
 
+function navigateBack() {
+    const backButton = document.querySelector('input[type="submit"][value="უკან დაბრუნება"]');
+        backButton.click();
 
+}
 
 fetchFakeData();
+
+// setTimeout(() => {
+//     navigateBack();
+// }, 1000)
