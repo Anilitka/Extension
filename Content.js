@@ -1,3 +1,4 @@
+
 console.log("chrome extension go!");
 
 const teckInput = document.getElementById("documentNo");
@@ -9,15 +10,21 @@ const form = document.getElementById("form");
 let data = [];
 let currentIndex = 0;
 
+
+
+
 async function fetchFakeData() {
     const jsonUrl = chrome.runtime.getURL("fakejson.json");
     try {
         const response = await fetch(jsonUrl);
         const jsonData = await response.json();
-
         data = jsonData.cars;
 
-        processCars();
+        for(let i = currentIndex; i< data.length;){
+           const car = data[currentIndex];
+           submitFormData(car);
+           data.shift();
+        }
     } catch (error) {
         console.error("Error fetching or parsing JSON:", error);
     }
@@ -84,9 +91,9 @@ async function solveCaptcha() {
 
 
 async function submitFormData(car) {
-    const teckInput = await waitForElement("#documentNo");
-    const numInput = await waitForElement("#vehicleNo2");
-    const capInput = await waitForElement("#captcha_code");
+    const teckInput = document.querySelector("#documentNo");
+    const numInput = document.querySelector("#vehicleNo2");
+    const capInput = document.querySelector("#captcha_code");
 
     teckInput.value = car.techPass;
     numInput.value = car.carNum;
@@ -95,35 +102,12 @@ async function submitFormData(car) {
     if (captchaSolution !== null) {
         capInput.value = captchaSolution;
         form.submit();
-        processNextCar();
-
+        await waitForSubmission(); // Wait for form submission to complete
     } else {
         console.log("Captcha solution failed for this car. Skipping.");
-        processNextCar();
-    }
-
-}
-
-async function processCars() {
-    for(car of data){
-        console.log(currentIndex)
-        if(currentIndex <= data.length){  
-        let car = data[currentIndex];
-        await submitFormData(car);
-        currentIndex++;
-        }
     }
 }
 
-function processNextCar() {
-   
-    currentIndex++;
-    if (currentIndex < data.length) {
-        processCars(); // Process the next car
-    } else {
-        console.log("All cars processed.");
-    }
-}
 
 async function waitForElement(selector) {
     return new Promise(resolve => {
@@ -137,9 +121,6 @@ async function waitForElement(selector) {
     });
 }
 
-function navigateBack() {
-    window.history.back();
-}
 
 
 fetchFakeData();
