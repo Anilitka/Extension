@@ -96,62 +96,33 @@ async function submitFormData(car) {
         capInput.value = captchaSolution;
         form.submit();
         processNextCar();
+
     } else {
         console.log("Captcha solution failed for this car. Skipping.");
-        processCars();
+        processNextCar();
     }
+
 }
 
-
 async function processCars() {
-    // console.log(currentIndex)
-    // if (currentIndex >= data.length) {
-    //     console.log("All cars processed.");
-    //     return; 
-    // }
-
-    // const car = data[currentIndex];
-    // await submitFormData(car);
-
     for(car of data){
         console.log(currentIndex)
         if(currentIndex <= data.length){  
-        const car = data[currentIndex];
+        let car = data[currentIndex];
         await submitFormData(car);
         currentIndex++;
-        
-        }
-        else if(currentIndex >= data.length){
-        console.log("All cars processed.");
-        return; 
         }
     }
-    // for(let i =0; i < data.length; i++){
-    //     const car = data[i];
-    //     await submitFormData(car);
-    //     data[i++];
-    //     navigateBack();
-    //     if(i > data.length){
-    //      console.log("All cars processed.");
-    //     return; 
-    //     }
-    // }
 }
 
 function processNextCar() {
+   
     currentIndex++;
-        console.log(currentIndex)
     if (currentIndex < data.length) {
-      
-        processCars();
-       
+        processCars(); // Process the next car
     } else {
         console.log("All cars processed.");
     }
-}
-
-function navigateBack() {
-    window.history.back();
 }
 
 async function waitForElement(selector) {
@@ -166,5 +137,9 @@ async function waitForElement(selector) {
     });
 }
 
-fetchFakeData();
+function navigateBack() {
+    window.history.back();
+}
 
+
+fetchFakeData();
