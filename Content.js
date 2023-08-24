@@ -7,6 +7,12 @@ const form = document.getElementById("form");
 
 let data = [];
 let currentIndex = 0;
+let processedIndices = [];
+
+async function fetchAndProcessData() {
+    await fetchFakeData();
+    processNextCar();
+}
 
 async function fetchFakeData() {
     const jsonUrl = chrome.runtime.getURL("fakejson.json");
@@ -87,72 +93,58 @@ async function submitFormAndNavigate(car) {
     const captchaSolution = await solveCaptcha();
     if (captchaSolution !== null) {
         capInput.value = captchaSolution;
+        
         form.submit();
         await new Promise(resolve => setTimeout(resolve, 2000)); // Delay after form submission
+        
         await navigateBack();
     }
 }
-async function processNextCar(carIndex) {
-    if (carIndex < data.length) {
-        const car = data[carIndex];
-        await submitFormAndNavigate(car);
+async function processNextCar() {
+    if (currentIndex < data.length) {
+        if (!processedIndices.includes(currentIndex)) {
+            processedIndices.push(currentIndex);
+           
+            const car = data[currentIndex];
+            await submitFormAndNavigate(car);
 
-        // Process the next car after a delay
-        setTimeout(() => {
-            processNextCar(carIndex + 1);
-        }, 2000); // Delay after form submission
+            
+            data.shift();
+
+            setTimeout(() => {
+                processNextCar();
+            }, 2000);
+        } else {
+            currentIndex++;
+            processNextCar();
+        }
     } else {
         console.log("All cars processed.");
     }
 }
 
-async function processAllCars() {
-    try {
-        // Send a message to the background script to request the stored index
-        chrome.runtime.sendMessage({ action: "requestStoredIndex" }, async (response) => {
-            currentIndex = response.storedIndex || currentIndex;
-
-            while (currentIndex < data.length) {
-                const car = data[currentIndex];
-                await submitFormAndNavigate(car);
-                currentIndex++;
-            }
-
-            console.log("All cars processed.");
-        });
-    } catch (error) {
-        console.error("Error processing cars:", error);
-    }
-}
-
-
-chrome.runtime.sendMessage({ action: "storeIndex", index: currentIndex });
-
-
-chrome.runtime.sendMessage({ action: "startProcessing" });
 
 async function navigateBack() {
     const backButtonSelector = 'input[type="submit"][value="უკან დაბრუნება"]';
 
-    const waitForButtonAndProcessNextCar = async () => {
-        const backButton = document.querySelector(backButtonSelector);
-        if (backButton) {
-            backButton.click();
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for navigation
-            currentIndex++; // Increment index for the next car
-            processNextCar(); // Process the next car
-        } else {
-            setTimeout(waitForButtonAndProcessNextCar, 1000); // Retry after 1 second
-        }
-    };
+    const backButton = document.querySelector(backButtonSelector);
+    if (backButton) {
+        backButton.click();
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-    waitForButtonAndProcessNextCar();
+        
+        teckInput.value = '';
+        numInput.value = '';
+        capInput.value = '';
+        currentIndex++;
+
+    } else {
+        currentIndex++;
+        processNextCar();
+    }
 }
 
-fetchFakeData()
-    
-setTimeout(async () => {
-    await fetchFakeData();
-    processNextCar(0); 
-}, 5000);
+ 
+
+fetchAndProcessData();
 
