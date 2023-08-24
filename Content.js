@@ -7,24 +7,29 @@ const form = document.getElementById("form");
 
 let data = [];
 let currentIndex = 0;
-let processedIndices = [];
 
+async function fetchAndProcessData() {
+    const apiUrl = "https://localhost:44371/api/UserCar/GetAllUserCars";
 
-async function fetchFakeData() {
-    const jsonUrl = chrome.runtime.getURL("fakejson.json");
     try {
-        const response = await fetch(jsonUrl);
+        const response = await fetch(apiUrl);
+ 
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+
         const jsonData = await response.json();
+        console.log(jsonData);
+ 
+        submitForm(jsonData)
 
-        data = jsonData.cars;
-        
-       processCar();
-
+        // return jsonData;
     } catch (error) {
-        console.error("Error fetching or parsing JSON:", error);
+        throw new Error("Error fetching data from API: " + error.message);
     }
-    console.log("Fetched data:", data);
 }
+
+ 
 
 
 
@@ -85,22 +90,25 @@ async function solveCaptcha() {
     }
 }
 
-async function submitForm(car) {
-    teckInput.value = car.techPass;
-    numInput.value = car.carNum;
+ 
 
+async function submitForm(car) {
+    teckInput.value = car.techPassportId;
+    numInput.value = car.carNumber;
     const captchaSolution = await solveCaptcha();
     if (captchaSolution !== null) {
         capInput.value = captchaSolution;
-        
+  
         console.log("Submitting form...");
         form.submit();
         console.log("Form submitted!");
         await new Promise(resolve => setTimeout(resolve, 2000)); 
+        
 
     }
 }
 async function processCar() {
+ 
     if (currentIndex < data.length) {
             const car = data[currentIndex];
             await submitForm(car);
@@ -135,6 +143,19 @@ async function navigateBack() {
     navigateBack();
  }, 1000)
 
-fetchFakeData();
+//  setInterval(() => {
+//     console.log('ana');
+//  }, 100);
+
+//  0,1 წამში რო გაიმეორებს ამ კოდს ეგაა დააყენებ სიტყვაზე 10 წუთზე მერე 10 წუთში ერთხელ გამოიძახებ ამ ფუნქცხიას
+//  შიგნით კიდე შეგიძლია ასეთი რამე ქნა  თუ სტატუს კოდი უდრის 417 თუ რაცაა ცვლადი გახადო false თუ 200 უდრის თრუე და მაგ შემთხვევაში გზავნო მარტო რექვესტი 
+//  ცოტა ცუდი გამოსავალი კია :/
+
+
+   
+fetchAndProcessData();
+
+
+
 
 
