@@ -9,10 +9,6 @@ let data = [];
 let currentIndex = 0;
 let processedIndices = [];
 
-async function fetchAndProcessData() {
-    await fetchFakeData();
-    processNextCar(currentIndex++);
-}
 
 async function fetchFakeData() {
     const jsonUrl = chrome.runtime.getURL("fakejson.json");
@@ -21,13 +17,16 @@ async function fetchFakeData() {
         const jsonData = await response.json();
 
         data = jsonData.cars;
+        
+       processCar();
+
     } catch (error) {
         console.error("Error fetching or parsing JSON:", error);
     }
     console.log("Fetched data:", data);
 }
 
-chrome.runtime.sendMessage({ action: "dataFetched", data: data });
+
 
 async function solveCaptcha() {
     const apiKey = '5e53dcfd4c785787b7fd85aad8544a2a';
@@ -86,7 +85,7 @@ async function solveCaptcha() {
     }
 }
 
-async function submitFormAndNavigate(car) {
+async function submitForm(car) {
     teckInput.value = car.techPass;
     numInput.value = car.carNum;
 
@@ -96,36 +95,16 @@ async function submitFormAndNavigate(car) {
         
         console.log("Submitting form...");
         form.submit();
-        
         console.log("Form submitted!");
         await new Promise(resolve => setTimeout(resolve, 2000)); 
-        
 
-        processedIndices.push(currentIndex);
-        data.shift();
-        chrome.storage.local.set({ processedIndices, data });
-
-        await navigateBack();
     }
 }
-async function processNextCar(currentIndex) {
+async function processCar() {
     if (currentIndex < data.length) {
-        if (!processedIndices.includes(currentIndex)) {
-            processedIndices.push(currentIndex);
-            console.log(currentIndex)
             const car = data[currentIndex];
-            await submitFormAndNavigate(car);
+            await submitForm(car);
 
-            data.shift();
-
-            setTimeout(() => {
-                processNextCar();
-            }, 2000);
-        } else {
-            currentIndex++;
-            processNextCar();
-        }
-        await navigateBack(currentIndex);
     } else {
         console.log("All cars processed.!!");
     }
@@ -142,24 +121,20 @@ async function navigateBack() {
         if (backButton) {
             backButton.click();
             await new Promise(resolve => setTimeout(resolve, 2000));
-    
-           
+
             teckInput.value = '';
             numInput.value = '';
             capInput.value = '';
-            currentIndex++;
-            console.log(currentIndex);
-        } else {
-            currentIndex++;
-            processNextCar(currentIndex);
-    }
+
+        }
 }
 
 
- 
-setTimeout(() => {
-   navigateBack();
-}, 1000)
-fetchAndProcessData();
+
+ setTimeout(() => {
+    navigateBack();
+ }, 1000)
+
+fetchFakeData();
 
 
