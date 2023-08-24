@@ -1,21 +1,27 @@
+
 {
-  "manifest_version": 3,
-  "name": "Extension",
-  "version": "1.0",
-  "permissions": [
-      "storage",
-      "activeTab"
+    "manifest_version": 3,
+    "name": "FinesExtention",
+    "version": "1.0.0",
+    "background": {
+        "service_worker": "background.js"
+  
+    },
+    "content_scripts": [{
+        "matches": ["<all_urls>"],
+        "js": ["Content.js"]
+    }],
+    "permissions": [
+      "storage"
   ],
-  "background": {
-      "service_worker": "background.js"
-  },
-  "content_scripts": [
-      {
-          "matches": ["<all_urls>"],
-          "js": ["Content.js"]
-      }
-  ],
-  "browser_action": {
-      "default_popup": "popup.html"
-  }
+    "action": {
+    "default_popup": "popup.html"
+    },
+    "web_accessible_resources": [
+        {
+          "resources": ["fakejson.json"],
+          "matches": ["<all_urls>"]
+        }
+      ]
+
 }

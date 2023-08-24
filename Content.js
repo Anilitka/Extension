@@ -1,61 +1,27 @@
-
-console.log("chrome extension go!");
+console.log("chrome extension go..!");
 
 const teckInput = document.getElementById("documentNo");
 const numInput = document.getElementById("vehicleNo2");
 const capInput = document.getElementById("captcha_code");
 const form = document.getElementById("form");
 
-
 let data = [];
 let currentIndex = 0;
 
-
 async function fetchFakeData() {
+    const jsonUrl = chrome.runtime.getURL("fakejson.json");
+    try {
+        const response = await fetch(jsonUrl);
+        const jsonData = await response.json();
 
-    // const jsonUrl = "fakejson.json"; // Adjust the URL as needed
-    // try {
-    //     const response = await fetch(jsonUrl);
-    //     const jsonData = await response.json();
-    //     data = jsonData.cars;
-
-    //     for (let i = currentIndex; i < data.length; ) {
-    //         const car = data[currentIndex];
-    //         submitFormData(car);
-    //     }Function sendGETRequest() {
-    fetch(URL, { method: "GET", headers: {'Content-Type': 'fakejson.json'}})
-    .then(response => response.json())
-    .then(data => {
-       chrome.storage.local.set({"currentIndex": 0})
-
-        for (let i = currentIndex; i < data.length;) {
-        chrome.storage.local.get(['currentIndex'], (result) => {
-            const currentIndex = result.currentIndex || 0;
-            // Incremented currentIndex will be used in the next loop iteration
-            i = currentIndex;
-        });
-        console.log(chrome.storage.local.get(['currentIndex']))
-            const car = data[i];
-            submitFormData(car);
-        }
-
-//      chrome.storage.sync.set({ "index": 0 }); chrome.storage.local.set({ "data": data });
-//      chrome.storage.sync.set({ "currentData": data[0] });
-//      })
-//      state = false;
-//      chrome.storage.sync.set({ "state": state });
-//      window.close();
-//      chrome.runtime.sendMessage({ message: "writeCarNumber" });
-//      .catch((error) => {
-// console.log(error);
-//      });
-     
-    })
-    .catch ((error) => {
+        data = jsonData.cars;
+    } catch (error) {
         console.error("Error fetching or parsing JSON:", error);
-    })
+    }
+    console.log("Fetched data:", data);
 }
-    
+
+chrome.runtime.sendMessage({ action: "dataFetched", data: data });
 
 async function solveCaptcha() {
     const apiKey = '5e53dcfd4c785787b7fd85aad8544a2a';
@@ -75,7 +41,7 @@ async function solveCaptcha() {
         };
     });
 
-
+    // Send base64 image data to 2Captcha for solving
     const formData = new FormData();
     formData.append('method', 'base64');
     formData.append('key', apiKey);
@@ -108,59 +74,85 @@ async function solveCaptcha() {
             console.error('Captcha solving failed:', solutionData);
             return null;
         }
-      } catch (error) {
+    } catch (error) {
         console.error('Error solving CAPTCHA:', error);
         return null;
     }
 }
 
-
-
-async function submitFormData(car) {
-    const teckInput = document.querySelector("#documentNo");
-    const numInput = document.querySelector("#vehicleNo2");
-    const capInput = document.querySelector("#captcha_code");
-
+async function submitFormAndNavigate(car) {
     teckInput.value = car.techPass;
     numInput.value = car.carNum;
 
     const captchaSolution = await solveCaptcha();
     if (captchaSolution !== null) {
         capInput.value = captchaSolution;
- 
         form.submit();
-        chrome.storage.local.get(['currentIndex'], (result) => {
-            const currentIndex = result.currentIndex || 0;
-            chrome.storage.local.set({ currentIndex: currentIndex + 1 });
-        });
-    } else {
-        console.log("Captcha solution failed for this car. Skipping.");
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Delay after form submission
+        await navigateBack();
     }
+}
+async function processNextCar(carIndex) {
+    if (carIndex < data.length) {
+        const car = data[carIndex];
+        await submitFormAndNavigate(car);
 
+        // Process the next car after a delay
+        setTimeout(() => {
+            processNextCar(carIndex + 1);
+        }, 2000); // Delay after form submission
+    } else {
+        console.log("All cars processed.");
+    }
 }
 
+async function processAllCars() {
+    try {
+        // Send a message to the background script to request the stored index
+        chrome.runtime.sendMessage({ action: "requestStoredIndex" }, async (response) => {
+            currentIndex = response.storedIndex || currentIndex;
 
-
-async function waitForElement(selector) {
-    return new Promise(resolve => {
-        const interval = setInterval(() => {
-            const element = document.querySelector(selector);
-            if (element) {
-                clearInterval(interval);
-                resolve(element);
+            while (currentIndex < data.length) {
+                const car = data[currentIndex];
+                await submitFormAndNavigate(car);
+                currentIndex++;
             }
-        }, 100);
-    });
+
+            console.log("All cars processed.");
+        });
+    } catch (error) {
+        console.error("Error processing cars:", error);
+    }
 }
 
-function navigateBack() {
-    const backButton = document.querySelector('input[type="submit"][value="უკან დაბრუნება"]');
-        backButton.click();
 
+chrome.runtime.sendMessage({ action: "storeIndex", index: currentIndex });
+
+
+chrome.runtime.sendMessage({ action: "startProcessing" });
+
+async function navigateBack() {
+    const backButtonSelector = 'input[type="submit"][value="უკან დაბრუნება"]';
+
+    const waitForButtonAndProcessNextCar = async () => {
+        const backButton = document.querySelector(backButtonSelector);
+        if (backButton) {
+            backButton.click();
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for navigation
+            currentIndex++; // Increment index for the next car
+            processNextCar(); // Process the next car
+        } else {
+            setTimeout(waitForButtonAndProcessNextCar, 1000); // Retry after 1 second
+        }
+    };
+
+    waitForButtonAndProcessNextCar();
 }
 
-fetchFakeData();
+fetchFakeData()
+    
+setTimeout(async () => {
+    await fetchFakeData();
+    processNextCar(0); 
+}, 5000);
 
-setTimeout(() => {
-    navigateBack();
-}, 1000)
