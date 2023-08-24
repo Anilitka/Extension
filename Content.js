@@ -11,7 +11,7 @@ let processedIndices = [];
 
 async function fetchAndProcessData() {
     await fetchFakeData();
-    processNextCar();
+    processNextCar(currentIndex++);
 }
 
 async function fetchFakeData() {
@@ -94,21 +94,28 @@ async function submitFormAndNavigate(car) {
     if (captchaSolution !== null) {
         capInput.value = captchaSolution;
         
+        console.log("Submitting form...");
         form.submit();
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Delay after form submission
         
+        console.log("Form submitted!");
+        await new Promise(resolve => setTimeout(resolve, 2000)); 
+        
+
+        processedIndices.push(currentIndex);
+        data.shift();
+        chrome.storage.local.set({ processedIndices, data });
+
         await navigateBack();
     }
 }
-async function processNextCar() {
+async function processNextCar(currentIndex) {
     if (currentIndex < data.length) {
         if (!processedIndices.includes(currentIndex)) {
             processedIndices.push(currentIndex);
-           
+            console.log(currentIndex)
             const car = data[currentIndex];
             await submitFormAndNavigate(car);
 
-            
             data.shift();
 
             setTimeout(() => {
@@ -118,33 +125,41 @@ async function processNextCar() {
             currentIndex++;
             processNextCar();
         }
+        await navigateBack(currentIndex);
     } else {
-        console.log("All cars processed.");
+        console.log("All cars processed.!!");
     }
 }
+
+
 
 
 async function navigateBack() {
-    const backButtonSelector = 'input[type="submit"][value="უკან დაბრუნება"]';
 
-    const backButton = document.querySelector(backButtonSelector);
-    if (backButton) {
-        backButton.click();
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        
-        teckInput.value = '';
-        numInput.value = '';
-        capInput.value = '';
-        currentIndex++;
-
-    } else {
-        currentIndex++;
-        processNextCar();
+        const backButtonSelector = 'input[type="submit"][value="უკან დაბრუნება"]';
+    
+        const backButton = document.querySelector(backButtonSelector);
+        if (backButton) {
+            backButton.click();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+    
+           
+            teckInput.value = '';
+            numInput.value = '';
+            capInput.value = '';
+            currentIndex++;
+            console.log(currentIndex);
+        } else {
+            currentIndex++;
+            processNextCar(currentIndex);
     }
 }
 
- 
 
+ 
+setTimeout(() => {
+   navigateBack();
+}, 1000)
 fetchAndProcessData();
+
 
