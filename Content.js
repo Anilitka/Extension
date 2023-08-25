@@ -4,33 +4,52 @@ const teckInput = document.getElementById("documentNo");
 const numInput = document.getElementById("vehicleNo2");
 const capInput = document.getElementById("captcha_code");
 const form = document.getElementById("form");
+const isLoginPage = window.location.href.includes("https://videos.police.ge/protocols.php?lang=ge");
 
 let data = [];
 let currentIndex = 0;
 
+let isProcessing = false; 
+
+if(!isLoginPage){
+fetchAndProcessData();    
+}
+
 async function fetchAndProcessData() {
-    const apiUrl = "https://localhost:44371/api/UserCar/GetAllUserCars";
+    if (isProcessing) {
+        return;
+    }
+
+    isProcessing = true;
+
+    const apiUrl = "https://localhost:7070/api/UserCar/GetAllUserCars";
 
     try {
         const response = await fetch(apiUrl);
- 
+
         if (!response.ok) {
             throw new Error("Network response was not ok");
         }
 
-        const jsonData = await response.json();
-        console.log(jsonData);
- 
-        submitForm(jsonData)
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const car = await response.json();
 
-        // return jsonData;
+            if (car) {
+                console.log(car);
+                await submitForm(car);
+            } else {
+                console.log("All cars processed!!");
+            }
+        } else {
+            throw new Error("Invalid response format");
+        }
     } catch (error) {
-        throw new Error("Error fetching data from API: " + error.message);
+        console.error("Error fetching and processing data:", error);
+    } finally {
+        isProcessing = false;
     }
 }
-
- 
-
 
 
 async function solveCaptcha() {
@@ -98,62 +117,45 @@ async function submitForm(car) {
     const captchaSolution = await solveCaptcha();
     if (captchaSolution !== null) {
         capInput.value = captchaSolution;
-  
+
         console.log("Submitting form...");
         form.submit();
         console.log("Form submitted!");
-        await new Promise(resolve => setTimeout(resolve, 2000)); 
-        
 
+
+        await navigateBack();
+
+
+        fetchAndProcessData();
     }
 }
-async function processCar() {
- 
-    if (currentIndex < data.length) {
-            const car = data[currentIndex];
-            await submitForm(car);
-
-    } else {
-        console.log("All cars processed.!!");
-    }
-}
-
-
 
 
 async function navigateBack() {
+    const backButtonSelector = 'input[type="submit"][value="უკან დაბრუნება"]';
 
-        const backButtonSelector = 'input[type="submit"][value="უკან დაბრუნება"]';
-    
-        const backButton = document.querySelector(backButtonSelector);
-        if (backButton) {
-            backButton.click();
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            teckInput.value = '';
-            numInput.value = '';
-            capInput.value = '';
-
-        }
+    const backButton = document.querySelector(backButtonSelector);
+    if (backButton) {
+        backButton.click();
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        teckInput.value = '';
+        numInput.value = '';
+        capInput.value = '';
+    }
 }
 
 
-
- setTimeout(() => {
+setTimeout(() => {
     navigateBack();
- }, 1000)
+},2000)
 
-//  setInterval(() => {
-//     console.log('ana');
-//  }, 100);
 
-//  0,1 წამში რო გაიმეორებს ამ კოდს ეგაა დააყენებ სიტყვაზე 10 წუთზე მერე 10 წუთში ერთხელ გამოიძახებ ამ ფუნქცხიას
-//  შიგნით კიდე შეგიძლია ასეთი რამე ქნა  თუ სტატუს კოდი უდრის 417 თუ რაცაა ცვლადი გახადო false თუ 200 უდრის თრუე და მაგ შემთხვევაში გზავნო მარტო რექვესტი 
-//  ცოტა ცუდი გამოსავალი კია :/
+
+
 
 
    
-fetchAndProcessData();
+
 
 
 
