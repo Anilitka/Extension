@@ -10,7 +10,9 @@
       "js": ["content.js"]
   }],
   "permissions": [
-      "activeTab"
+      "activeTab",
+      "https://localhost:7070/api/UserCar/GetAllUserCars",
+      "https://localhost:7070/api/ReceivedSms/UpdateFineStatus"
   ],
   "action": {
       "default_popup": "popup.html"

@@ -117,7 +117,7 @@ async function submitForm(car) {
     teckInput.value = car.techPassportId;
     numInput.value = car.carNumber;
     const captchaSolution = await solveCaptcha();
-    if (captchaSolution !== null && !document.querySelector("warning")) {
+    if (captchaSolution !== null ) {
         capInput.value = captchaSolution;
 
         console.log("Submitting form...");
@@ -159,9 +159,34 @@ async function processRows() {
         }
     });
 
-    // sendDataToBackend(data); // Send modified data to the backend
+    const url = 'https://localhost:7070/api/ReceivedSms/UpdateFineStatus';
+
+
+        const formattedData = data.map(item => ({
+            receiptNumber: item.receiptNumber,
+            paid: item.paid
+        }));
+        console.log(formattedData)
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formattedData)
+        });
+
+        if (response.ok) {
+            console.log('Data sent to backend successfully');
+        } else {
+            console.error('Failed to send data to backend');
+        }
+
 }
 processRows();
+
+
+
 
 async function navigateBack() {
     const backButtonSelector = 'input[type="submit"][value="უკან დაბრუნება"]';
@@ -179,7 +204,7 @@ async function navigateBack() {
 
 setTimeout(() => {
     navigateBack();
-},2000)
+},7000)
 
 
 
