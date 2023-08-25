@@ -5,7 +5,7 @@ const numInput = document.getElementById("vehicleNo2");
 const capInput = document.getElementById("captcha_code");
 const form = document.getElementById("form");
 const isLoginPage = window.location.href.includes("https://videos.police.ge/protocols.php?lang=ge");
-const warning = document.getElementsByClassName("warning")
+ 
 
 let data = [];
 let currentIndex = 0;
@@ -112,43 +112,64 @@ async function solveCaptcha() {
 }
 
  
-
 async function submitForm(car) {
     teckInput.value = car.techPassportId;
     numInput.value = car.carNumber;
     const captchaSolution = await solveCaptcha();
-    if (captchaSolution !== null ) {
+ const warning = document.getElementsByClassName("warning")
+
+    if (captchaSolution !== null) {  
         capInput.value = captchaSolution;
 
+        fetch('https://videos.police.ge/submit-index.php', {
+            method:'POST',
+            body: JSON.stringify(
+                {
+                    documentNo: car.techPassportId,
+                    vehicleNo2:  car.carNumber,
+                    captcha_code:  captchaSolution
+                }
+            )
+        }).then(res => res.json())
+        .then(reszzz => {
+            console.log(reszzz + 'test');
+        })
+
         console.log("Submitting form...");
-        form.submit();
+  
+      
         console.log("Form submitted!");
+  
+ 
+        await navigateBack(); 
+      if (warning == null) {
+              form.submit();
+              fetchAndProcessData(); 
+        }
 
-
-        await navigateBack();
-
-
-        fetchAndProcessData();
+    
     }
 }
 async function processRows() {
     const rows = document.querySelectorAll('.row');
-
+   let paid;
     rows.forEach(row => {
         const fineNum = row.querySelector('.col:nth-child(2)');
-        const fineStatus = row.querySelector('.col:nth-child(6)');
+        const fineStatus = row.querySelector('.col:nth-child(7)');
+
+       
 
         if (fineNum && fineStatus) {
             const fineNumText = fineNum.textContent.trim();
             const fineStatusText = fineStatus.textContent.trim();
 
-            let paid;
+         
             if (fineStatusText.includes('გადაუხდელია')) {
                 paid = false;
             } else {
                 paid = true;
             }
-
+ console.log(paid);
             const receivedData = {
                 receiptNumber: fineNumText,
                 paid: paid
@@ -160,7 +181,7 @@ async function processRows() {
     });
 
     const url = 'https://localhost:7070/api/ReceivedSms/UpdateFineStatus';
-
+ 
 
         const formattedData = data.map(item => ({
             receiptNumber: item.receiptNumber,
@@ -172,9 +193,10 @@ async function processRows() {
         console.log(formattedData1)
 
         const response = await fetch(url, {
-            method: 'POST',
+            method: 'PATCH',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin':'*'
             },
             body: formattedData1
         });
@@ -207,7 +229,7 @@ async function navigateBack() {
 
 setTimeout(() => {
     navigateBack();
-},30000)
+},5000)
 
 
 
