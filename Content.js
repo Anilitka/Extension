@@ -5,6 +5,7 @@ const numInput = document.getElementById("vehicleNo2");
 const capInput = document.getElementById("captcha_code");
 const form = document.getElementById("form");
 const isLoginPage = window.location.href.includes("https://videos.police.ge/protocols.php?lang=ge");
+const warning = document.getElementsByClassName("warning")
 
 let data = [];
 let currentIndex = 0;
@@ -12,6 +13,7 @@ let currentIndex = 0;
 let isProcessing = false; 
 
 if(!isLoginPage){
+
 fetchAndProcessData();    
 }
 
@@ -115,7 +117,7 @@ async function submitForm(car) {
     teckInput.value = car.techPassportId;
     numInput.value = car.carNumber;
     const captchaSolution = await solveCaptcha();
-    if (captchaSolution !== null) {
+    if (captchaSolution !== null && !document.querySelector("warning")) {
         capInput.value = captchaSolution;
 
         console.log("Submitting form...");
@@ -129,7 +131,37 @@ async function submitForm(car) {
         fetchAndProcessData();
     }
 }
+async function processRows() {
+    const rows = document.querySelectorAll('.row');
 
+    rows.forEach(row => {
+        const fineNum = row.querySelector('.col:nth-child(2)');
+        const fineStatus = row.querySelector('.col:nth-child(6)');
+
+        if (fineNum && fineStatus) {
+            const fineNumText = fineNum.textContent.trim();
+            const fineStatusText = fineStatus.textContent.trim();
+
+            let paid;
+            if (fineStatusText.includes('გადახდილია')) {
+                paid = true;
+            } else {
+                paid = false;
+            }
+
+            const receivedData = {
+                receiptNumber: fineNumText,
+                paid: paid
+            };
+
+            data.push(receivedData);
+            console.log(receivedData);
+        }
+    });
+
+    // sendDataToBackend(data); // Send modified data to the backend
+}
+processRows();
 
 async function navigateBack() {
     const backButtonSelector = 'input[type="submit"][value="უკან დაბრუნება"]';
