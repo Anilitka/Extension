@@ -167,13 +167,16 @@ async function processRows() {
             paid: item.paid
         }));
         console.log(formattedData)
+         
+        const formattedData1 = JSON.stringify(formattedData);
+        console.log(formattedData1)
 
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(formattedData)
+            body: formattedData1
         });
 
         if (response.ok) {
@@ -204,7 +207,7 @@ async function navigateBack() {
 
 setTimeout(() => {
     navigateBack();
-},7000)
+},30000)
 
 
 
