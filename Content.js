@@ -143,10 +143,10 @@ async function processRows() {
             const fineStatusText = fineStatus.textContent.trim();
 
             let paid;
-            if (fineStatusText.includes('გადახდილია')) {
-                paid = true;
-            } else {
+            if (fineStatusText.includes('გადაუხდელია')) {
                 paid = false;
+            } else {
+                paid = true;
             }
 
             const receivedData = {
