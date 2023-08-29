@@ -1,3 +1,5 @@
+
+
 console.log("chrome extension go..!");
 
 const teckInput = document.getElementById("documentNo");
@@ -13,47 +15,16 @@ let currentIndex = 0;
 
 let isProcessing = false; 
 
-if(!isLoginPage){
 
-fetchAndProcessData();    
+if(!isLoginPage){
+    
+    fetchAndProcessData()  
 }
 if(isLoginPage){
     processRows();
 }
-async function fetchAndProcessData(status) {
-    // if (isProcessing) {
-    //     return;
-    // }
+async function fetchAndProcessData() {
 
-    // isProcessing = true;
-
-    // const apiUrl = "https://localhost:5001/api/UserCar/GetAllUserCars";
-
-    // try {
-    //     const response = await fetch(apiUrl);
-
-    //     if (!response.ok) {
-    //         throw new Error("Network response was not ok");
-    //     }
-
-    //     const contentType = response.headers.get("content-type");
-    //     if (contentType && contentType.includes("application/json")) {
-    //         const car = await response.json();
-
-    //         if (car) {
-    //             console.log(car);
-    //             await submitForm(car);
-    //         } else {
-    //             console.log("All cars processed!!");
-    //         }
-    //     } else {
-    //         throw new Error("Invalid response format");
-    //     }
-    // } catch (error) {
-    //     console.error("Error fetching and processing data:", error);
-    // } finally {
-    //     isProcessing = false;
-    // }
 
     if (isProcessing) {
         return;
@@ -61,8 +32,10 @@ async function fetchAndProcessData(status) {
 
     isProcessing = true;
 
-    const apiUrl = `https://localhost:5001/api/UserCar/GetAllUserCars?status=${status}`;
+    const apiUrl = 'https://localhost:5001/api/UserCar/GetAllUserCars?Gotonext=' + getQueryParam();
 
+    console.log("Before API call: ", getQueryParam());
+    console.log("Before API call: apiUrl =", apiUrl);
     try {
         const response = await fetch(apiUrl);
 
@@ -76,7 +49,7 @@ async function fetchAndProcessData(status) {
 
             if (car) {
                 console.log(car);
-                // Pass the car object as a parameter to submitForm
+                
                 await submitForm(car);
             } else {
                 console.log("All cars processed!!");
@@ -154,43 +127,48 @@ async function submitForm(car) {
     teckInput.value = car.techPassportId;
     numInput.value = car.carNumber;
     const captchaSolution = await solveCaptcha();
- const warning = document.getElementsByClassName("warning")
 
 
+    if (captchaSolution !== null) {
+        capInput.value = captchaSolution;
 
-        // fetch('https://videos.police.ge/submit-index.php', {
-        //     method:'POST',
-        //     body: JSON.stringify(
-        //         {
-        //             documentNo: car.techPassportId,
-        //             vehicleNo2:  car.carNumber,
-        //             captcha_code:  captchaSolution
-        //         }
-        //     )
-        // }).then(res => res.text())
-        // .then(reszzz => {
-        //     console.log(reszzz + 'test');
-        // })
+        console.log("Warning element:", warning);
 
-        if (captchaSolution !== null) {
-            capInput.value = captchaSolution;
-             
-            console.log("Submitting form...");
-            form.submit();
-            console.log("Form submitted!");  
+  
+
+        // if (warning !== null) {
+        //     submitStatus = false;
+        //     console.log("Captcha was wrong or form submission failed.");
+        //     console.log("Updated submitStatus to:", submitStatus);
+         
+          
+         
+        // } else {
+        //     submitStatus = true;
+        //     console.log("Captcha was correct and form submission was successful.");
+        //     console.log("Updated submitStatus to:", submitStatus);
+            
+          
            
-            if (warning.length > 0) {
-                capInput.value = ''; 
-                console.log("Captcha was wrong or form submission failed.");
-                const status = false;
-                fetchAndProcessData(status);
-            } else {
-                console.log("Captcha was correct and form submission was successful.");
-                const status = true;
-                fetchAndProcessData(status); 
-            }
-        }
+        // }
+        
+        setTimeout(() => {
+            console.log("Submitting form...");
+             form.submit();
+             console.log("Form submitted!");      
+        }, 3000)
+  
+         fetchAndProcessData(); 
 
+    }
+}
+function getQueryParam() {
+    const warning = document.querySelector(".warning");
+    if (warning !== null) {
+        return "false";
+    } else {
+        return "true";
+    }
 }
 
 async function processRows() {
@@ -246,15 +224,12 @@ async function processRows() {
 
         if (response.ok) {
             console.log('Data sent to backend successfully');
+
         } else {
             console.error('Failed to send data to backend');
         }
 
 }
-
-
-
-
 
 async function navigateBack() {
     const backButtonSelector = 'input[type="submit"][value="უკან დაბრუნება"]';
@@ -273,18 +248,3 @@ async function navigateBack() {
 setTimeout(() => {
     navigateBack();
 },5000)
-
-
-
-
-
-
-
-
-
-   
-
-
-
-
-
