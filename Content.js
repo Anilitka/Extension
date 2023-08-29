@@ -5,6 +5,7 @@ const numInput = document.getElementById("vehicleNo2");
 const capInput = document.getElementById("captcha_code");
 const form = document.getElementById("form");
 const isLoginPage = window.location.href.includes("https://videos.police.ge/protocols.php?lang=ge");
+const warning = document.getElementsByClassName("warning");
  
 
 let data = [];
@@ -19,14 +20,48 @@ fetchAndProcessData();
 if(isLoginPage){
     processRows();
 }
-async function fetchAndProcessData() {
+async function fetchAndProcessData(status) {
+    // if (isProcessing) {
+    //     return;
+    // }
+
+    // isProcessing = true;
+
+    // const apiUrl = "https://localhost:5001/api/UserCar/GetAllUserCars";
+
+    // try {
+    //     const response = await fetch(apiUrl);
+
+    //     if (!response.ok) {
+    //         throw new Error("Network response was not ok");
+    //     }
+
+    //     const contentType = response.headers.get("content-type");
+    //     if (contentType && contentType.includes("application/json")) {
+    //         const car = await response.json();
+
+    //         if (car) {
+    //             console.log(car);
+    //             await submitForm(car);
+    //         } else {
+    //             console.log("All cars processed!!");
+    //         }
+    //     } else {
+    //         throw new Error("Invalid response format");
+    //     }
+    // } catch (error) {
+    //     console.error("Error fetching and processing data:", error);
+    // } finally {
+    //     isProcessing = false;
+    // }
+
     if (isProcessing) {
         return;
     }
 
     isProcessing = true;
 
-    const apiUrl = "http://localhost:5000/api/UserCar/GetAllUserCars";
+    const apiUrl = `https://localhost:5001/api/UserCar/GetAllUserCars?status=${status}`;
 
     try {
         const response = await fetch(apiUrl);
@@ -41,6 +76,7 @@ async function fetchAndProcessData() {
 
             if (car) {
                 console.log(car);
+                // Pass the car object as a parameter to submitForm
                 await submitForm(car);
             } else {
                 console.log("All cars processed!!");
@@ -120,8 +156,7 @@ async function submitForm(car) {
     const captchaSolution = await solveCaptcha();
  const warning = document.getElementsByClassName("warning")
 
-    if (captchaSolution !== null) {  
-        capInput.value = captchaSolution;
+
 
         // fetch('https://videos.police.ge/submit-index.php', {
         //     method:'POST',
@@ -132,26 +167,32 @@ async function submitForm(car) {
         //             captcha_code:  captchaSolution
         //         }
         //     )
-        // }).then(res => res.json())
+        // }).then(res => res.text())
         // .then(reszzz => {
         //     console.log(reszzz + 'test');
         // })
 
-        console.log("Submitting form...");
-  
-         
-              form.submit();
-            
-        
-        console.log("Form submitted!");
-  
- 
-        await navigateBack(); 
-        fetchAndProcessData(); 
+        if (captchaSolution !== null) {
+            capInput.value = captchaSolution;
+             
+            console.log("Submitting form...");
+            form.submit();
+            console.log("Form submitted!");  
+           
+            if (warning.length > 0) {
+                capInput.value = ''; 
+                console.log("Captcha was wrong or form submission failed.");
+                const status = false;
+                fetchAndProcessData(status);
+            } else {
+                console.log("Captcha was correct and form submission was successful.");
+                const status = true;
+                fetchAndProcessData(status); 
+            }
+        }
 
-    
-    }
 }
+
 async function processRows() {
     const rows = document.querySelectorAll('.row');
    let paid;
@@ -182,7 +223,7 @@ async function processRows() {
         }
     });
 
-    const url = 'http://localhost:5000/api/ReceivedSms/UpdateFineStatus';
+    const url = 'https://localhost:5001/api/ReceivedSms/UpdateFineStatus';
  
 
         const formattedData = data.map(item => ({
@@ -232,6 +273,9 @@ async function navigateBack() {
 setTimeout(() => {
     navigateBack();
 },5000)
+
+
+
 
 
 
