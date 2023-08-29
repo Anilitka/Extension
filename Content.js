@@ -16,7 +16,9 @@ if(!isLoginPage){
 
 fetchAndProcessData();    
 }
-
+if(isLoginPage){
+    processRows();
+}
 async function fetchAndProcessData() {
     if (isProcessing) {
         return;
@@ -24,7 +26,7 @@ async function fetchAndProcessData() {
 
     isProcessing = true;
 
-    const apiUrl = "https://localhost:7070/api/UserCar/GetAllUserCars";
+    const apiUrl = "http://localhost:5000/api/UserCar/GetAllUserCars";
 
     try {
         const response = await fetch(apiUrl);
@@ -121,31 +123,31 @@ async function submitForm(car) {
     if (captchaSolution !== null) {  
         capInput.value = captchaSolution;
 
-        fetch('https://videos.police.ge/submit-index.php', {
-            method:'POST',
-            body: JSON.stringify(
-                {
-                    documentNo: car.techPassportId,
-                    vehicleNo2:  car.carNumber,
-                    captcha_code:  captchaSolution
-                }
-            )
-        }).then(res => res.json())
-        .then(reszzz => {
-            console.log(reszzz + 'test');
-        })
+        // fetch('https://videos.police.ge/submit-index.php', {
+        //     method:'POST',
+        //     body: JSON.stringify(
+        //         {
+        //             documentNo: car.techPassportId,
+        //             vehicleNo2:  car.carNumber,
+        //             captcha_code:  captchaSolution
+        //         }
+        //     )
+        // }).then(res => res.json())
+        // .then(reszzz => {
+        //     console.log(reszzz + 'test');
+        // })
 
         console.log("Submitting form...");
   
-      
+         
+              form.submit();
+            
+        
         console.log("Form submitted!");
   
  
         await navigateBack(); 
-      if (warning == null) {
-              form.submit();
-              fetchAndProcessData(); 
-        }
+        fetchAndProcessData(); 
 
     
     }
@@ -180,7 +182,7 @@ async function processRows() {
         }
     });
 
-    const url = 'https://localhost:7070/api/ReceivedSms/UpdateFineStatus';
+    const url = 'http://localhost:5000/api/ReceivedSms/UpdateFineStatus';
  
 
         const formattedData = data.map(item => ({
@@ -208,7 +210,7 @@ async function processRows() {
         }
 
 }
-processRows();
+
 
 
 
@@ -237,7 +239,6 @@ setTimeout(() => {
 
 
    
-
 
 
 
