@@ -176,23 +176,31 @@ async function processRows() {
    let paid;
     rows.forEach(row => {
         const fineNum = row.querySelector('.col:nth-child(2)');
+        const fineDate = row.querySelector('.col:nth-child(3)');
+        const fineArticle = row.querySelector('.col:nth-child(4)');
+        const fineAmount = row.querySelector('.col:nth-child(5)');
         const fineStatus = row.querySelector('.col:nth-child(7)');
 
        
 
-        if (fineNum && fineStatus) {
-            const fineNumText = fineNum.textContent.trim();
+        if (fineNum && fineDate && fineArticle && fineAmount && fineStatus) {
+            const fineNumText = fineNum.textContent.trim();           
+            const fineDateText = fineDate.textContent.trim().slice(0, 10);
+            const fineArticleText = fineArticle.textContent.trim();
+            const finAmountText = parseInt(fineAmount.textContent.trim().slice(0, -4));
             const fineStatusText = fineStatus.textContent.trim();
-
          
             if (fineStatusText.includes('გადაუხდელია')) {
                 paid = false;
             } else {
                 paid = true;
             }
- console.log(paid);
+            console.log(paid);
             const receivedData = {
                 receiptNumber: fineNumText,
+                date: fineDateText,
+                article: fineArticleText,
+                amount: finAmountText,
                 paid: paid
             };
 
@@ -206,6 +214,9 @@ async function processRows() {
 
         const formattedData = data.map(item => ({
             receiptNumber: item.receiptNumber,
+            date: item.date,
+            article: item.article,
+            amount: item.amount,
             paid: item.paid
         }));
         console.log(formattedData)
@@ -228,6 +239,7 @@ async function processRows() {
         } else {
             console.error('Failed to send data to backend');
         }
+        console.log(response)
 
 }
 
