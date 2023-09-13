@@ -133,24 +133,6 @@ async function submitForm(car) {
         capInput.value = captchaSolution;
 
         console.log("Warning element:", warning);
-
-  
-
-        // if (warning !== null) {
-        //     submitStatus = false;
-        //     console.log("Captcha was wrong or form submission failed.");
-        //     console.log("Updated submitStatus to:", submitStatus);
-         
-          
-         
-        // } else {
-        //     submitStatus = true;
-        //     console.log("Captcha was correct and form submission was successful.");
-        //     console.log("Updated submitStatus to:", submitStatus);
-            
-          
-           
-        // }
         
         setTimeout(() => {
             console.log("Submitting form...");
@@ -164,8 +146,14 @@ async function submitForm(car) {
 }
 function getQueryParam() {
     const warning = document.querySelector(".warning");
+    
     if (warning !== null) {
-        return "false";
+    const message = warning.textContent;
+    if(message.includes("ადმინისტრაციული სამართალდარღვევები ვერ მოიძებნა.")){
+        return "true";
+    }else{
+     return "false";    
+    }
     } else {
         return "true";
     }
