@@ -32,7 +32,7 @@ async function fetchAndProcessData() {
 
     isProcessing = true;
 
-    const apiUrl = 'https://localhost:5001/api/UserCar/GetAllUserCars?Gotonext=' + getQueryParam();
+    const apiUrl = 'https://' + getQueryParam();
 
     console.log("Before API call: ", getQueryParam());
     console.log("Before API call: apiUrl =", apiUrl);
@@ -102,7 +102,7 @@ async function solveCaptcha() {
 
             while (true) {
                 const checkSolutionResponse = await fetch(
-                    `https://2captcha.com/res.php?key=${apiKey}&action=get&id=${captchaId}&json=1`
+                    `https://`
                 );
                 const checkSolutionData = await checkSolutionResponse.json();
 
@@ -197,7 +197,7 @@ async function processRows() {
         }
     });
 
-    const url = 'https://localhost:5001/api/ReceivedSms/UpdateFineStatus';
+    const url = 'https://';
  
 
         const formattedData = data.map(item => ({
